@@ -11,7 +11,7 @@ h1 { margin: 0 0 0.25rem 0; }
 .subtitle { color: #666; margin-bottom: 1rem; font-size: 0.9rem; }
 table { border-collapse: collapse; width: 100%; }
 th, td { border: 1px solid #bbb; padding: 0.5rem; text-align: left; }
-th { background: #eee; }
+th { background: #585555ff; }
 tfoot td { font-weight: bold; }
 .small { font-size: 0.9rem; color: #666; }
 `;

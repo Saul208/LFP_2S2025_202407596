@@ -1,3 +1,4 @@
+// src/index.js
 import path from 'path';
 import readline from 'readline';
 import { fileURLToPath } from 'url';
@@ -17,7 +18,7 @@ async function main() {
   await ensureDir(REPORTS_DIR);
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
-  console.log('Simulador de CallCenter — Consola (JavaScript)');
+  console.log('Simulador de CallCenter — Consola');
   console.log('---------------------------------------------');
 
   let running = true;

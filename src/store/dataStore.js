@@ -4,9 +4,9 @@ import { Call } from '../models/Call.js';
 
 class DataStore {
   constructor() {
-    this.operators = new Map(); // id -> Operator
-    this.clients = new Map();   // id -> Client
-    this.calls = [];            // Call[]
+    this.operators = new Map(); // id Operator
+    this.clients = new Map();   // id Client
+    this.calls = [];            // Call
   }
 
   upsertOperator(id, name) {
@@ -14,7 +14,7 @@ class DataStore {
     if (!this.operators.has(key)) {
       this.operators.set(key, new Operator(key, name));
     } else {
-      // If name differs, keep the first non-empty name.
+      // Si el nombre no coincide, mantenga el primer nombre que no esté vacío
       const op = this.operators.get(key);
       if (!op.name && name) op.name = name;
     }

@@ -1,7 +1,7 @@
 id_operador,nombre_operador,estrellas,id_cliente,nombre_cliente
-101,Ana López,xxxxx,5001,Juan Pérez
-101,Ana López,xxx00,5002,Luis Gómez
-102,Carlos Ruiz,xx000,5003,María Díaz
-103,Sofía Méndez,x0000,5004,Pedro López
-102,Carlos Ruiz,xxxx0,5003,María Díaz
-103,Sofía Méndez,x0000,5005,Lucía Lara
+101,Ana López,x;x;x;x;x,5001,Juan Pérez
+101,Ana López,x;x;x;0;0,5002,Luis Gómez
+102,Carlos Ruiz,x;x;0;0;0,5003,María Díaz
+103,Sofía Méndez,x;0;0;0;0,5004,Pedro López
+102,Carlos Ruiz,x;x;x;x;0,5003,María Díaz
+103,Sofía Méndez,x;0;0;0;0,5005,Lucía Lara
