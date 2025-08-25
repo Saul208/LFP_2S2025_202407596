@@ -1,0 +1,10 @@
+{
+  "name": "lfp-practica-2s2025-callcenter",
+  "version": "1.0.0",
+  "description": "Simulador de CallCenter en consola (LFP 2S2025)",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  }
+}
