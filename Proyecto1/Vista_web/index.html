@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TourneyJS – Analizador Léxico (solo interfaz)</title>
+  <style>
+    :root{
+      --bg:#f6f7fb; --fg:#111827; --brand:#0A1828; --brand2:#1f2d3b;
+      --card:#fff; --muted:#6b7280; --border:#e5e7eb;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg)}
+    header{background:var(--brand);color:#fff;padding:20px 16px}
+    header h1{margin:0;font-size:1.2rem;text-align:center}
+    .toolbar{display:flex;gap:12px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+    .btn{border:0;background:var(--brand2);color:#fff;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:600;text-align:center}
+    .btn[disabled]{opacity:.6;cursor:not-allowed}
+    main{padding:18px;max-width:1200px;margin:0 auto}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media (max-width:880px){.grid{grid-template-columns:1fr}}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px}
+    .card h2,.card h3{margin:0 0 10px;font-size:1rem}
+    .hint{color:var(--muted);font-size:.9rem}
+    textarea{width:100%;min-height:260px;padding:10px;border-radius:8px;border:1px solid var(--border);resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace}
+    table{width:100%;border-collapse:collapse;font-size:.92rem}
+    th,td{border:1px solid var(--border);padding:6px 8px;text-align:left;vertical-align:top}
+    th{background:#f3f4f6}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+    .chip{font-size:.75rem;padding:2px 6px;border-radius:999px;color:#fff}
+    .chip.ok{background:#16a34a}
+    .chip.bad{background:#b91c1c}
+    .footer{margin-top:18px;text-align:center;font-size:.85rem;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TourneyJS – Analizador de Torneos (Interfaz mínima)</h1>
+    <div class="toolbar">
+      <label class="btn" id="btnOpen" for="fileInput">Cargar .txt</label>
+      <button class="btn" id="btnAnalyze" type="button">Analizar Torneo</button>
+      <button class="btn" id="btnReports" type="button">Generar Reportes</button>
+      <button class="btn" id="btnBracket" type="button">Mostrar Bracket (DOT)</button>
+    </div>
+  </header>
+
+  <main>
+    <input id="fileInput" type="file" accept=".txt" hidden />
+
+    <div class="grid">
+      <section class="card" aria-labelledby="lblEntrada">
+        <h2 id="lblEntrada">Definición del Torneo</h2>
+        <p class="hint" id="loadedName">Cargue un archivo de torneo (.txt) o pegue el contenido.</p>
+        <label for="inputText" class="hint">Entrada (.txt)</label>
+        <textarea id="inputText" placeholder="Pegue aquí o use 'Cargar .txt'" spellcheck="false"></textarea>
+      </section>
+
+      <section class="card" aria-labelledby="lblSalidas">
+        <h2 id="lblSalidas">Salidas</h2>
+        <div class="chips">
+          <span class="chip ok" id="tkCount">0 tokens</span>
+          <span class="chip bad" id="erCount">0 errores</span>
+        </div>
+
+        <h3>Tokens</h3>
+        <table id="tokensTable">
+          <thead>
+          <tr><th>No.</th><th>Tipo</th><th>Lexema</th><th>Línea</th><th>Columna</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <h3 style="margin-top:10px">Errores Léxicos</h3>
+        <table id="errorsTable">
+          <thead>
+          <tr><th>No.</th><th>Lexema</th><th>Tipo de Error</th><th>Descripción</th><th>Línea</th><th>Columna</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </div>
+
+    <section class="card" style="margin-top:16px" aria-labelledby="lblBracket">
+      <h2 id="lblBracket">Vista DOT (Bracket)</h2>
+      <label for="dotOut" class="hint">Contenido exportable a Graphviz</label>
+      <textarea id="dotOut" placeholder="Aquí aparecerá el .dot generado" spellcheck="false"></textarea>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="btnSaveDot" type="button">Descargar bracket.dot</button>
+      </div>
+      <p class="hint">Solo análisis <strong>léxico</strong>. Tipo de error siempre: <em>Token inválido</em>.</p>
+    </section>
+
+    <div class="footer">Interfaz simple — sin frameworks. Núcleo léxico en <code>src/lexer_core.js</code>.</div>
+  </main>
+
+  <noscript>Activa JavaScript para usar la interfaz.</noscript>
+
+  <script src="../src/lexer_core.js" defer></script>
+  <script src="./app.js" defer></script>
+</body>
+</html>
