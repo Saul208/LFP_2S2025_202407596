@@ -1,4 +1,4 @@
-// app.js — UI: carga .txt y ejecuta el analizador léxico (src/lexer_core.js)
+
 document.addEventListener("DOMContentLoaded", () => {
   const $ = (sel) => document.querySelector(sel);
 
