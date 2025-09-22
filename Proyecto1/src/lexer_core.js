@@ -1,4 +1,4 @@
-
+// Núcleo del analizador léxico (UMD)
 (function (root, factory) {
   if (typeof module === "object" && module.exports) {
     module.exports = factory();
@@ -7,19 +7,19 @@
   }
 })(typeof self !== "undefined" ? self : this, function () {
 
-
+  // ==== Catálogos ====
   const RESERVED = new Set([
     "TORNEO", "EQUIPOS", "ELIMINACION",
-    "EQUIPO", "JUGADOR",
-    "FASE", "PARTIDO", "GOLEADOR",
+    "EQUIPO", "JUGADOR", "GOLEADOR",
+    "FASE", "PARTIDO", "VS",
     "CUARTOS", "SEMIFINAL", "FINAL",
-    "LOCAL", "VISITANTE", "VS"
+    "LOCAL", "VISITANTE"
   ]);
 
   const ATTRIBUTES = new Set([
     "NOMBRE","EQUIPOS","JUGADORES","POSICION","NUMERO","EDAD",
-    "PARTIDOS","RESULTADO","GOLEADORES","MINUTO","PAIS"
-  ]);
+    "PARTIDOS","PARTIDO","RESULTADO","GOLEADORES","MINUTO","PAIS","SEDE"
+  ]); //  ← PARTIDO agregado aquí
 
   const SYMBOLS = {
     "{": "Llave Izquierda",
@@ -34,13 +34,13 @@
     "-": "Guion"
   };
 
- 
+  // ==== Helpers ====
   const isWS   = (ch) => ch === " " || ch === "\t" || ch === "\n" || ch === "\r";
   const isDig  = (ch) => ch >= "0" && ch <= "9";
-  const isLtr  = (ch) => /[A-Za-zÁÉÍÓÚáéíóúÑñ_]/.test(ch);
-  const isIdCh = (ch) => /[A-Za-zÁÉÍÓÚáéíóúÑñ0-9_]/.test(ch);
+  const isLtr  = ch => (ch>='A'&&ch<='Z')||(ch>='a'&&ch<='z')||'ÁÉÍÓÚáéíóúÑñ_'.includes(ch);
+  const isIdCh = ch => isLtr(ch) || (ch>='0'&&ch<='9');
 
-  // ==== Analizador ====
+
   function lex(text) {
     const tokens = [];
     const errors = [];
@@ -59,17 +59,14 @@
     while (i < text.length) {
       let ch = peek();
 
-      // espacios
       if (isWS(ch)) { advance(); continue; }
 
-      // símbolos de un carácter
       if (SYMBOLS[ch]) {
         const r = row, c = col;
         emitT(SYMBOLS[ch], advance(), r, c);
         continue;
       }
 
-      // cadenas "..."
       if (ch === '"') {
         const r = row, c = col;
         let buf = "";
@@ -85,22 +82,20 @@
         continue;
       }
 
-      // números
       if (isDig(ch)) {
         const r = row, c = col;
         let buf = "";
+        buf += advance();
         while (isDig(peek())) buf += advance();
-        if (buf === "") buf = advance(); 
         emitT("Número", buf, r, c);
         continue;
       }
 
-      // identificadores / reservadas / atributos
       if (isLtr(ch)) {
         const r = row, c = col;
         let buf = "";
+        buf += advance();
         while (isIdCh(peek())) buf += advance();
-        if (buf === "") buf = advance();
 
         const up = buf.toUpperCase();
         if (ATTRIBUTES.has(up)) emitT("Atributo", buf, r, c);
@@ -109,7 +104,6 @@
         continue;
       }
 
-      
       const r = row, c = col;
       emitE(advance(), r, c, "Carácter no reconocido");
     }

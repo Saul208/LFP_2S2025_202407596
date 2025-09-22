@@ -3,39 +3,38 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TourneyJS – Analizador Léxico (solo interfaz)</title>
+  <title>TourneyJS – Analizador y Reportes</title>
   <style>
-    :root{
-      --bg:#f6f7fb; --fg:#111827; --brand:#0A1828; --brand2:#1f2d3b;
-      --card:#fff; --muted:#6b7280; --border:#e5e7eb;
-    }
+    :root{ --bg:#fff; --fg:#000; --muted:#777; --line:#000; }
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--fg)}
-    header{background:var(--brand);color:#fff;padding:20px 16px}
-    header h1{margin:0;font-size:1.2rem;text-align:center}
-    .toolbar{display:flex;gap:12px;justify-content:center;margin-top:12px;flex-wrap:wrap}
-    .btn{border:0;background:var(--brand2);color:#fff;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:600;text-align:center}
-    .btn[disabled]{opacity:.6;cursor:not-allowed}
-    main{padding:18px;max-width:1200px;margin:0 auto}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    header{border-bottom:1px solid var(--line);padding:14px 12px}
+    header h1{margin:0;font-size:18px;font-weight:700;text-align:center;letter-spacing:.2px}
+    .toolbar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+    .btn{appearance:none;background:#fff;color:#000;border:1px solid #000;border-radius:4px;padding:8px 10px;font-weight:600;cursor:pointer}
+    .btn:focus{outline:2px dashed #000;outline-offset:2px}
+    .btn:hover{background:#000;color:#fff}
+    main{max-width:1100px;margin:0 auto;padding:14px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media (max-width:880px){.grid{grid-template-columns:1fr}}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px}
-    .card h2,.card h3{margin:0 0 10px;font-size:1rem}
-    .hint{color:var(--muted);font-size:.9rem}
-    textarea{width:100%;min-height:260px;padding:10px;border-radius:8px;border:1px solid var(--border);resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace}
-    table{width:100%;border-collapse:collapse;font-size:.92rem}
-    th,td{border:1px solid var(--border);padding:6px 8px;text-align:left;vertical-align:top}
-    th{background:#f3f4f6}
+    .card{border:1px solid var(--line);border-radius:6px;padding:12px;background:#fff}
+    .card h2,.card h3{margin:0 0 8px 0;font-size:15px}
+    .hint{color:var(--muted);font-size:12px;margin:0 0 6px 0}
+    textarea{width:100%;min-height:240px;border:1px solid var(--line);border-radius:4px;padding:8px;background:#fff;color:#000;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+    th{background:#f2f2f2}
+    tr:nth-child(even) td{background:#fafafa}
     .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-    .chip{font-size:.75rem;padding:2px 6px;border-radius:999px;color:#fff}
-    .chip.ok{background:#16a34a}
-    .chip.bad{background:#b91c1c}
-    .footer{margin-top:18px;text-align:center;font-size:.85rem;color:var(--muted)}
+    .chip{border:1px solid var(--line);border-radius:999px;padding:2px 8px;font-size:12px}
+    .dot-wrap{border:1px solid var(--line);border-radius:6px;padding:8px;background:#fff}
+    #dotView{width:100%;overflow:auto;min-height:240px}
+    #dotView svg{max-width:100%}
   </style>
 </head>
 <body>
   <header>
-    <h1>TourneyJS – Analizador de Torneos (Interfaz mínima)</h1>
+    <h1>TourneyJS – Analizador de Torneos</h1>
     <div class="toolbar">
       <label class="btn" id="btnOpen" for="fileInput">Cargar .txt</label>
       <button class="btn" id="btnAnalyze" type="button">Analizar Torneo</button>
@@ -50,22 +49,21 @@
     <div class="grid">
       <section class="card" aria-labelledby="lblEntrada">
         <h2 id="lblEntrada">Definición del Torneo</h2>
-        <p class="hint" id="loadedName">Cargue un archivo de torneo (.txt) o pegue el contenido.</p>
-        <label for="inputText" class="hint">Entrada (.txt)</label>
+        <p class="hint" id="loadedName">Cargue un archivo (.txt) o pegue el contenido.</p>
         <textarea id="inputText" placeholder="Pegue aquí o use 'Cargar .txt'" spellcheck="false"></textarea>
       </section>
 
       <section class="card" aria-labelledby="lblSalidas">
         <h2 id="lblSalidas">Salidas</h2>
         <div class="chips">
-          <span class="chip ok" id="tkCount">0 tokens</span>
-          <span class="chip bad" id="erCount">0 errores</span>
+          <span class="chip" id="tkCount">0 tokens</span>
+          <span class="chip" id="erCount">0 errores</span>
         </div>
 
         <h3>Tokens</h3>
         <table id="tokensTable">
           <thead>
-          <tr><th>No.</th><th>Tipo</th><th>Lexema</th><th>Línea</th><th>Columna</th></tr>
+            <tr><th>No.</th><th>Tipo</th><th>Lexema</th><th>Línea</th><th>Columna</th></tr>
           </thead>
           <tbody></tbody>
         </table>
@@ -73,29 +71,33 @@
         <h3 style="margin-top:10px">Errores Léxicos</h3>
         <table id="errorsTable">
           <thead>
-          <tr><th>No.</th><th>Lexema</th><th>Tipo de Error</th><th>Descripción</th><th>Línea</th><th>Columna</th></tr>
+            <tr><th>No.</th><th>Lexema</th><th>Tipo de Error</th><th>Descripción</th><th>Línea</th><th>Columna</th></tr>
           </thead>
           <tbody></tbody>
         </table>
       </section>
     </div>
 
-    <section class="card" style="margin-top:16px" aria-labelledby="lblBracket">
+    <section class="card" style="margin-top:12px" aria-labelledby="lblBracket">
       <h2 id="lblBracket">Vista DOT (Bracket)</h2>
-      <label for="dotOut" class="hint">Contenido exportable a Graphviz</label>
-      <textarea id="dotOut" placeholder="Aquí aparecerá el .dot generado" spellcheck="false"></textarea>
+      <p class="hint">Vista rápida (SVG interno) + descarga .dot</p>
+      <textarea id="dotOut" placeholder="Presiona “Mostrar Bracket (DOT)” para generar" spellcheck="false"></textarea>
+      <div class="dot-wrap" style="margin-top:8px"><div id="dotView"></div></div>
       <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn" id="btnSaveDot" type="button">Descargar bracket.dot</button>
       </div>
-      <p class="hint">Solo análisis <strong>léxico</strong>. Tipo de error siempre: <em>Token inválido</em>.</p>
     </section>
-
-    <div class="footer">Interfaz simple — sin frameworks. Núcleo léxico en <code>src/lexer_core.js</code>.</div>
   </main>
 
   <noscript>Activa JavaScript para usar la interfaz.</noscript>
 
+  <!-- Núcleos -->
   <script src="../src/lexer_core.js" defer></script>
+  <script src="../src/report_core.js" defer></script>
+  <script src="../src/html_templates.js" defer></script>
+  <script src="../src/graphviz_builder.js" defer></script>
+
+  <!-- UI -->
   <script src="./app.js" defer></script>
 </body>
 </html>

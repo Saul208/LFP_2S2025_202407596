@@ -1,3 +1,0 @@
-salidas/*.html
-**/tokens.html
-**/errores.html
