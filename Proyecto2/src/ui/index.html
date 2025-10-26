@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Traductor Java → Python (UI — Tema Claro)</title>
+<style>
+  :root{
+    /* PALETA TEMA CLARO (nuevo diseño y colores) */
+    --bg:#f6f7fb;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --panel:#ffffff;
+    --panel-2:#f8fafc;
+    --border:#e5e7eb;
+    --shadow: 0 12px 30px rgba(15,23,42,.08), 0 2px 8px rgba(15,23,42,.06);
+
+    --accent:#7166ff;      /* índigo/violeta suave */
+    --accent-2:#22c55e;    /* verde esmeralda */
+    --accent-3:#0ea5e9;    /* cian */
+    --danger:#ef4444;      /* rojo */
+    --warn:#f59e0b;        /* ámbar */
+
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --sans: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--ink); font-family:var(--sans); background:var(--bg);
+    background-image:
+      radial-gradient( circle at 20% 10%, rgba(113,102,255,.10), transparent 40%),
+      radial-gradient( circle at 90% 10%, rgba(14,165,233,.10), transparent 35%),
+      radial-gradient( circle at 0% 90%, rgba(34,197,94,.08), transparent 35%);
+  }
+
+  /* BARRA SUPERIOR */
+  .bar{
+    position:sticky; top:0; z-index:10;
+    display:flex; align-items:center; gap:.75rem;
+    padding:.6rem .9rem;
+    background:linear-gradient(180deg, #ffffffcc 0%, #ffffffb6 100%);
+    backdrop-filter: blur(6px);
+    border-bottom:1px solid var(--border);
+  }
+  .title{
+    display:flex; align-items:center; gap:.6rem; font-weight:700; letter-spacing:.2px;
+  }
+  .badge{
+    font-size:.78rem; color:#fff; background:var(--accent); padding:.15rem .45rem; border-radius:999px;
+  }
+  .spacer{margin-left:auto}
+
+  /* MENÚ */
+  .menu{position:relative}
+  .menu>button{
+    background:#ffffff; border:1px solid var(--border); color:var(--ink);
+    padding:.45rem .7rem; border-radius:.55rem; cursor:pointer; box-shadow: var(--shadow);
+  }
+  .menu>button:hover{background:var(--panel-2)}
+  .dropdown{
+    position:absolute; top:120%; left:0; min-width:240px;
+    background:var(--panel); border:1px solid var(--border); border-radius:.7rem; box-shadow: var(--shadow); display:none;
+  }
+  .menu.open .dropdown{display:block}
+  .dd-item{
+    display:flex; justify-content:space-between; gap:.75rem; padding:.65rem .8rem; cursor:pointer; border-bottom:1px solid var(--border); font-size:.95rem;
+  }
+  .dd-item:last-child{border-bottom:0}
+  .dd-item:hover{background:var(--panel-2)}
+  .kbd{color:var(--muted); font-size:.85rem}
+
+  /* LAYOUT */
+  .wrap{
+    max-width:1240px; margin:1.1rem auto; padding:0 1rem;
+    display:grid; grid-template-columns:1fr 1fr; gap:1rem;
+  }
+  .panel{
+    display:flex; flex-direction:column; gap:.6rem;
+    background:var(--panel); border:1px solid var(--border); border-radius:1rem; box-shadow: var(--shadow);
+    min-height:440px; overflow:hidden;
+  }
+  .panel h3{margin:1rem 1rem 0; font-weight:700}
+  .panel p.sub{margin:0 1rem .25rem; color:var(--muted); font-size:.92rem}
+
+  .editor{
+    flex:1; background:var(--panel-2); border-top:1px dashed var(--border);
+    margin:0 1rem 1rem; border-radius:.75rem; overflow:hidden;
+  }
+  textarea{
+    width:100%; height:100%; resize:none; border:0; outline:0; padding:1rem 1.1rem;
+    background:transparent; color:var(--ink); font:13.2px/1.5 var(--mono);
+  }
+
+  .actions{display:flex; flex-wrap:wrap; gap:.55rem; justify-content:flex-end; padding:0 1rem 1rem}
+  .btn{
+    background:#fff; border:1px solid var(--border); color:var(--ink);
+    padding:.5rem .85rem; border-radius:.65rem; cursor:pointer; box-shadow: var(--shadow);
+    transition: transform .04s ease;
+  }
+  .btn:hover{background:#fafafa; transform: translateY(-1px)}
+  .btn.primary{background:var(--accent); border-color:transparent; color:#fff}
+  .btn.success{background:var(--accent-2); border-color:transparent; color:#062a12}
+  .btn.danger{background:var(--danger); border-color:transparent; color:#fff}
+  .btn[disabled]{opacity:.6; cursor:not-allowed; transform:none}
+
+  .status{max-width:1240px; margin:.2rem auto .6rem; padding:0 1rem; color:var(--muted); font-size:.95rem}
+  .console{
+    max-width:1240px; margin:0 auto 1.2rem; border:1px solid var(--border); border-radius:1rem; box-shadow: var(--shadow);
+    background:var(--panel); padding:.75rem 1rem; font:12.8px/1.55 var(--mono); min-height:84px; white-space:pre-wrap;
+  }
+
+  .tag{display:inline-block; padding:.18rem .5rem; border-radius:999px; font-size:.8rem; border:1px solid var(--border); margin-right:.35rem}
+  .tag.ok{background:#eafff3; color:#065f46; border-color:#bbf7d0}
+  .tag.warn{background:#fff7e5; color:#92400e; border-color:#fde68a}
+  .tag.err{background:#ffecec; color:#991b1b; border-color:#fecaca}
+
+  /* MODAL */
+  .modal-back{position:fixed; inset:0; background:#0f172a1a; display:none; place-items:center; z-index:20; backdrop-filter: blur(2px)}
+  .modal{
+    width:min(980px,92vw); max-height:86vh; overflow:auto;
+    background:var(--panel); border:1px solid var(--border); border-radius:1rem; box-shadow: var(--shadow);
+  }
+  .modal header{
+    display:flex; justify-content:space-between; align-items:center; gap:.75rem;
+    padding:.8rem 1rem; border-bottom:1px solid var(--border);
+  }
+  .modal .body{padding:1rem}
+  table{width:100%; border-collapse:collapse; background:var(--panel-2); border:1px solid var(--border); border-radius:.6rem; overflow:hidden}
+  th,td{border-bottom:1px solid var(--border); padding:.6rem .7rem; text-align:left; font-size:.92rem}
+  th{position:sticky; top:0; background:#eef2ff; color:#3730a3}
+  tr:hover td{background:#f9fafb}
+</style>
+</head>
+<body>
+
+<!-- BARRA SUPERIOR -->
+<div class="bar">
+  <div class="title">
+    <span style="width:.9rem;height:.9rem;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-3))"></span>
+    <span>Traductor Java → Python</span>
+    <span class="badge">UI renovada</span>
+  </div>
+
+  <div class="menu" id="m-archivo">
+    <button onclick="UI.toggle('m-archivo')">Archivo ▾</button>
+    <div class="dropdown">
+      <div class="dd-item" onclick="UI.nuevo()"><span>Nuevo</span></div>
+      <div class="dd-item" onclick="UI.abrir()"><span>Abrir .java</span></div>
+      <div class="dd-item" onclick="UI.guardarJava()"><span>Guardar Java</span></div>
+      <div class="dd-item" onclick="UI.guardarPython()"><span>Guardar Python como…</span></div>
+      <div class="dd-item" onclick="UI.salir()"><span>Salir</span></div>
+    </div>
+  </div>
+
+  <div class="menu" id="m-traducir">
+    <button onclick="UI.toggle('m-traducir')">Analizar/Traducir ▾</button>
+    <div class="dropdown">
+      <div class="dd-item" onclick="UI.generar()"><span>Generar Traducción</span></div>
+      <div class="dd-item" onclick="UI.verTokens()"><span>Ver Tokens</span></div>
+      <div class="dd-item" onclick="UI.descargarReporteLexicoHTML()"><span>Errores Léxicos (HTML)</span></div>
+      <div class="dd-item" onclick="UI.descargarReporteSintacticoHTML()"><span>Errores Sintácticos (HTML)</span></div>
+      <div class="dd-item" onclick="UI.simular()"><span>Simular Ejecución</span></div>
+    </div>
+  </div>
+
+  <div class="menu" id="m-ayuda">
+    <button onclick="UI.toggle('m-ayuda')">Ayuda ▾</button>
+    <div class="dropdown">
+      <div class="dd-item" onclick="UI.acerca()"><span>Acerca de…</span></div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+</div>
+
+<!-- EDITORES -->
+<div class="wrap">
+  <section class="panel">
+    <h3>Editor (Java)</h3>
+    <p class="sub">Pega tu archivo .java o escribe aquí.</p>
+    <div class="editor"><textarea id="javaArea" spellcheck="false" placeholder="// Escribe tu código Java aquí…"></textarea></div>
+    <div class="actions">
+      <button class="btn" onclick="UI.nuevo()">Nuevo</button>
+      <button class="btn" onclick="UI.abrir()">Abrir</button>
+      <button class="btn" onclick="UI.guardarJava()">Guardar</button>
+      <button class="btn primary" onclick="UI.generar()">Generar Traducción</button>
+      <button class="btn" onclick="UI.verTokens()">Ver Tokens</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3>Python traducido</h3>
+    <p class="sub">Resultado solo si no hay errores léxicos/sintácticos.</p>
+    <div class="editor"><textarea id="pyArea" spellcheck="false" placeholder="# Aquí aparecerá el Python traducido…"></textarea></div>
+    <div class="actions">
+      <button class="btn" id="btnSavePy" onclick="UI.guardarPython()" disabled>Guardar Python como…</button>
+      <button class="btn" onclick="UI.simular()">Simular Ejecución</button>
+    </div>
+  </section>
+</div>
+
+<div class="status" id="status">Listo.</div>
+<div class="console" id="console"></div>
+
+<!-- MODAL TOKENS -->
+<div class="modal-back" id="tokModal">
+  <div class="modal">
+    <header>
+      <div>Tokens generados <span id="tokCount" class="tag"></span></div>
+      <div>
+        <button class="btn" onclick="UI.descargarTokensHTML()">Tokens (HTML)</button>
+        <button class="btn" onclick="UI.descargarReporteLexicoHTML()">Errores Léxicos (HTML)</button>
+        <button class="btn" onclick="UI.descargarReporteSintacticoHTML()">Errores Sintácticos (HTML)</button>
+        <button class="btn" onclick="UI.cerrarModal()">Cerrar</button>
+      </div>
+    </header>
+    <div class="body">
+      <div style="overflow:auto">
+        <table id="tokTable">
+          <thead>
+            <tr><th>No.</th><th>Lexema</th><th>Tipo</th><th>Línea</th><th>Columna</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileOpener" accept=".java,.txt" style="display:none"/>
+
+<script>
+/* ===== util ===== */
+const $ = s => document.querySelector(s);
+const Console = {
+  log: (msg) => { const c=$("#console"); c.innerHTML += msg + "\n"; c.scrollTop=c.scrollHeight; },
+  clear: () => { $("#console").innerHTML = ""; }
+};
+function download(filename, text, type="text/plain;charset=utf-8") {
+  const blob = new Blob([text], {type});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 500);
+}
+function escapeHtml(s){ return (s??'').toString().replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+/* Builder de reportes HTML (tokens / léxico / sintaxis) */
+function buildReportHTML(titulo, headers, rows){
+  const head = `
+  <meta charset="utf-8">
+  <title>${titulo}</title>
+  <style>
+    :root{--b:#0f172a;--p:#ffffff;--bd:#e5e7eb}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#f6f7fb;color:#0f172a;margin:0;padding:24px}
+    h2{margin:0 0 12px 0}
+    .card{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:16px;box-shadow:0 10px 28px rgba(15,23,42,.08)}
+    table{width:100%;border-collapse:collapse;margin-top:8px;background:#fff;border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+    th,td{border-bottom:1px solid var(--bd);padding:10px 12px;text-align:left}
+    th{background:#eef2ff;color:#3730a3}
+    .muted{color:#64748b;font-size:14px;margin-top:18px}
+  </style>`;
+  const thead = `<tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr>`;
+  const tbody = rows.length
+    ? rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")
+    : `<tr><td colspan="${headers.length}">Sin datos</td></tr>`;
+  return `<!doctype html><html><head>${head}</head><body>
+    <div class="card">
+      <h2>${titulo}</h2>
+      <table><thead>${thead}</thead><tbody>${tbody}</tbody></table>
+      <div class="muted">Generado por la interfaz (HTML/JS puro). Sin librerías de análisis ni *regex* para tokenizar.</div>
+    </div>
+  </body></html>`;
+}
+
+/* ===== motor de análisis (SIN fallback) ===== */
+async function analizarYTraducir(javaSrc) {
+  Console.clear();
+  const result = { tokens: [], lexErrors: [], synErrors: [], python: "", ast: null, symbols: null };
+
+  const haveLexer = !!window.Lexer;
+  const haveParser = !!window.Parser;
+  const haveTranslatorClass = !!window.Translator; // clase (método de instancia)
+
+  if (!haveLexer || !haveParser) {
+    Console.log("[WARN] No se encontró Lexer/Parser en window. No se realizará análisis ni traducción.");
+    return result;
+  }
+
+  // 1) Léxico
+  const lex = new window.Lexer(javaSrc).analyze();
+  result.tokens = lex.tokens || [];
+  result.lexErrors = lex.errors || [];
+  Console.log("[INFO] Tokens: " + (result.tokens.length));
+  if (result.lexErrors.length) {
+    Console.log("[ERROR] Errores léxicos:");
+    for (const e of result.lexErrors) Console.log("   - " + e.toString());
+  } else {
+    Console.log("[OK] Sin errores léxicos.");
+  }
+
+  // 2) Sintaxis
+  const syn = new window.Parser(result.tokens).parse();
+  result.synErrors = syn.errors || [];
+  result.ast = syn.ast || null;
+  result.symbols = syn.symbols || null;
+
+  if (result.synErrors.length) {
+    Console.log("[ERROR] Errores sintácticos:");
+    for (const e of result.synErrors) Console.log("   - " + e.toString());
+    Console.log("\nNo se generó Python por errores en el análisis.");
+    return result;
+  } else {
+    Console.log("[OK] Sin errores sintácticos.");
+  }
+
+  // 3) Traducción (instanciar Translator)
+  if (haveTranslatorClass) {
+    try {
+      const t = new window.Translator(result.ast, result.symbols);
+      result.python = t.translate();
+      Console.log("[OK] Traducción completada por Translator.js");
+    } catch (err) {
+      Console.log("[ERROR] Translator.js falló. No se generó Python.");
+      Console.log(String(err));
+      result.python = "";
+    }
+  } else {
+    Console.log("[INFO] No hay Translator.js. No se generó Python.");
+    result.python = "";
+  }
+
+  return result;
+}
+
+/* ===== UI ===== */
+const UI = {
+  _tokensCache: [],
+  _lexCache: [],
+  _synCache: [],
+
+  toggle(id){ document.querySelectorAll('.menu').forEach(m=> m.id===id ? m.classList.toggle('open') : m.classList.remove('open')); },
+  closeMenus(){ document.querySelectorAll('.menu').forEach(m=> m.classList.remove('open')); },
+
+  nuevo(){
+  // limpiar editores y consola
+  $('#javaArea').value = "";
+  $('#pyArea').value  = "";
+  Console.clear();
+
+  // limpiar cachés para que NO se acumulen
+  UI._tokensCache = [];
+  UI._lexCache    = [];
+  UI._synCache    = [];
+
+  // resetear el modal de tokens si estaba abierto
+  const tbody = $('#tokTable tbody');
+  if (tbody) tbody.innerHTML = "";
+  const tag = $('#tokCount');
+  if (tag) { tag.textContent = '0'; tag.className = 'tag warn'; }
+  const modal = $('#tokModal');
+  if (modal) modal.style.display = 'none';
+
+  // resetear estado
+  $('#btnSavePy').disabled = true;
+  $('#status').textContent = 'Nuevo documento';
+  UI.closeMenus();
+},
+
+
+  abrir(){
+    UI.closeMenus();
+    const f = $('#fileOpener'); f.value="";
+    f.onchange = async e=>{
+      const file = e.target.files[0]; if (!file) return;
+      const txt = await file.text();
+      $('#javaArea').value = txt;
+      $('#status').textContent = `Archivo cargado: ${file.name}`;
+    };
+    f.click();
+  },
+
+  guardarJava(){
+    const name = 'Entrada.java';
+    download(name, $('#javaArea').value);
+    $('#status').textContent = `Guardado ${name}`;
+    UI.closeMenus();
+  },
+
+  guardarPython(){
+    // bloquea si hay errores o si no hay Python
+    const hasErrors = (UI._lexCache.length || UI._synCache.length);
+    const py = ($('#pyArea').value || "").trim();
+    if (hasErrors || !py){
+      $('#status').textContent = 'No se puede guardar: hay errores o no hay código Python generado.';
+      return;
+    }
+    const name = 'Salida.py';
+    download(name, $('#pyArea').value);
+    $('#status').textContent = `Guardado ${name}`;
+    UI.closeMenus();
+  },
+
+  salir(){
+    UI.closeMenus();
+    if (confirm('¿Cerrar pestaña? Se perderán cambios no guardados.')) window.close();
+  },
+
+  async generar(){
+    UI.closeMenus();
+    const src = $('#javaArea').value || "";
+    if (!src.trim()){ $('#status').textContent='No hay código Java.'; return; }
+    $('#status').textContent='Analizando…';
+
+    const res = await analizarYTraducir(src);
+    UI._tokensCache = res.tokens || [];
+    UI._lexCache = res.lexErrors || [];
+    UI._synCache = res.synErrors || [];
+
+    $('#pyArea').value = res.python || "";
+    const ok = (UI._lexCache.length===0 && UI._synCache.length===0 && (res.python||"").trim().length>0);
+    $('#btnSavePy').disabled = !ok;
+
+    const tags = [];
+    tags.push(`<span class="tag ${res.lexErrors.length?'err':'ok'}">${res.lexErrors.length?'Léxico: '+res.lexErrors.length:'Léxico OK'}</span>`);
+    tags.push(`<span class="tag ${res.synErrors.length?'err':'ok'}">${res.synErrors.length?'Sintaxis: '+res.synErrors.length:'Sintaxis OK'}</span>`);
+    $('#status').innerHTML = `Análisis finalizado. ${tags.join(' ')} ${ok?'— traducción disponible':'— no se generó Python'}`;
+  },
+
+  verTokens(){
+    const tbody = $('#tokTable tbody'); tbody.innerHTML="";
+    UI._tokensCache.forEach((t,i)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${i+1}</td><td>${escapeHtml(t.value)}</td><td>${t.type}</td><td>${t.line||''}</td><td>${t.column||''}</td>`;
+      tbody.appendChild(tr);
+    });
+    $('#tokCount').textContent = UI._tokensCache.length;
+    $('#tokCount').className = 'tag ' + (UI._tokensCache.length?'ok':'warn');
+    $('#tokModal').style.display='grid';
+    UI.closeMenus();
+  },
+
+  cerrarModal(){ $('#tokModal').style.display='none'; },
+
+  descargarTokensHTML(){
+    const headers = ["No.","Lexema","Tipo","Línea","Columna"];
+    const rows = (UI._tokensCache||[]).map((t,i)=>[
+      String(i+1), escapeHtml(t.value??""), String(t.type??""), String(t.line??""), String(t.column??"")
+    ]);
+    const html = buildReportHTML("REPORTE DE TOKENS", headers, rows);
+    download('reporte_tokens.html', html, 'text/html;charset=utf-8');
+  },
+
+  descargarReporteLexicoHTML(){
+    const headers = ["No.","Error","Descripción","Línea","Columna"];
+    const rows = (UI._lexCache||[]).map((e,i)=>[
+      String(i+1), escapeHtml(e.char??""), escapeHtml(e.description??""), String(e.line??""), String(e.column??"")
+    ]);
+    const html = buildReportHTML("REPORTE DE ERRORES LÉXICOS", headers, rows);
+    download('reporte_lexico.html', html, 'text/html;charset=utf-8');
+  },
+
+  descargarReporteSintacticoHTML(){
+    const headers = ["No.","Error","Descripción","Línea","Columna"];
+    const rows = (UI._synCache||[]).map((e,i)=>[
+      String(i+1), escapeHtml(e.token??""), escapeHtml(e.description??""), String(e.line??""), String(e.column??"")
+    ]);
+    const html = buildReportHTML("REPORTE DE ERRORES SINTÁCTICOS", headers, rows);
+    download('reporte_sintactico.html', html, 'text/html;charset=utf-8');
+  },
+
+  simular(){
+    UI.closeMenus();
+    Console.clear();
+    const code = $('#pyArea').value.split(/\r?\n/);
+    if (!code.length){ Console.log('No hay código Python para simular.'); return; }
+    let i = 0;
+    Console.log('▶ Simulación paso a paso (Espacio avanza, Esc sale)…');
+
+    const onKey = (ev)=>{
+      if (ev.key === 'Escape') { done(); return; }
+      if (ev.key !== ' ' && ev.key !== 'Spacebar') return;
+      step();
+    };
+    document.addEventListener('keydown', onKey);
+
+    function step(){
+      if (i>=code.length){ Console.log('■ Fin de simulación.'); done(); return; }
+      const line = code[i++];
+      Console.log((i+'').padStart(3,'0') + ' | ' + line);
+      const m = line.match(/^\s*print\s*\((.*)\)\s*$/);
+      if (m) Console.log('    → salida: ' + m[1].replace(/^["']|["']$/g,''));
+    }
+    function done(){ document.removeEventListener('keydown', onKey); }
+  },
+
+  acerca(){
+    UI.closeMenus();
+    alert('Traductor Java → Python\nInterfaz renovada (tema claro).\nRecuerda cargar Lexer, Parser y Translator en window.');
+  }
+};
+
+/* Cerrar menús al hacer click fuera */
+document.addEventListener('click', e=>{
+  if (!e.target.closest('.menu')) UI.closeMenus();
+});
+</script>
+
+<script src="../models/Token.js"></script>
+<script src="../models/LexicalError.js"></script>
+<script src="../models/SyntaxError.js"></script>
+<script src="../utils/Character.js"></script>
+<script src="../Lexer.js"></script>
+<script src="../Parser.js"></script>
+<script src="../Translator.js"></script>
+
+
+</body>
+</html>
